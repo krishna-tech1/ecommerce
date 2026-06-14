@@ -17,7 +17,7 @@ const Logo = ({
           className
         )}
       >
-        Boulos
+        Maestro
         <span
           className={cn(
             "text-shop_light_green group-hover:text-shop_dark_green hoverEffect",

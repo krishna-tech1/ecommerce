@@ -2,15 +2,18 @@ import type { Metadata } from "next";
 import "../globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { ClerkProvider } from "@clerk/nextjs";
+import { SessionProvider } from "next-auth/react";
+import { Suspense } from "react";
+import UtmTracker from "@/components/UtmTracker";
+import MetaPixelTracker from "@/components/MetaPixelTracker";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s - BoulosShopcart online store",
-    default: "Boulos online shop store",
+    template: "%s - MaestroShopcart online store",
+    default: "Maestro online shop store",
   },
   description:
-    "Boulos online shop store, Your one stop shop for all your needs",
+    "Maestro online shop store, Your one stop shop for all your needs",
 };
 
 export default function RootLayout({
@@ -19,13 +22,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <SessionProvider>
       <div className="flex flex-col min-h-screen">
+        <Suspense fallback={null}>
+          <UtmTracker />
+          <MetaPixelTracker />
+        </Suspense>
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />
       </div>
-    </ClerkProvider>
+    </SessionProvider>
   );
 }
 

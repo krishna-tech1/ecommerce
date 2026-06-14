@@ -7,6 +7,9 @@ import { motion } from "motion/react";
 import { Check, Home, Package, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 
+import { trackMetaEvent } from "@/lib/meta-pixel";
+import { getStoredUtmParameters } from "@/lib/utm";
+
 const SuccessPageContent = () => {
   const { resetCart } = useStore();
   const searchParams = useSearchParams();
@@ -15,6 +18,14 @@ const SuccessPageContent = () => {
   useEffect(() => {
     if (orderNumber) {
       resetCart();
+      const utm = getStoredUtmParameters();
+      trackMetaEvent("Purchase", {
+        order_number: orderNumber,
+        currency: "USD",
+        utm_source: utm?.utm_source || "",
+        utm_campaign: utm?.utm_campaign || "",
+        utm_medium: utm?.utm_medium || "",
+      });
     }
   }, [orderNumber, resetCart]);
   return (

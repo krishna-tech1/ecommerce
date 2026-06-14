@@ -1,4 +1,4 @@
-import { Product } from "@/sanity.types";
+import { DbProduct } from "@/lib/types";
 import useStore from "@/store";
 import React from "react";
 import { Button } from "./ui/button";
@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 interface Props {
-  product: Product;
+  product: DbProduct;
   className?: string;
 }
 const QuantityButtons = ({ product, className }: Props) => {

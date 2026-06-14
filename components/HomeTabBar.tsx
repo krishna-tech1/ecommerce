@@ -8,14 +8,18 @@ interface Props {
 
 const HomeTabbar = ({ selectedTab, onTabSelect }: Props) => {
   return (
-    <div className="flex items-center flex-wrap gap-5 justify-between">
+    <div className="flex items-center flex-wrap gap-5 justify-between border-b border-slate-100 pb-4">
       <div className="flex items-center gap-1.5 text-sm font-semibold">
         <div className="flex items-center gap-1.5 md:gap-3">
           {productType?.map((item) => (
             <button
               onClick={() => onTabSelect(item?.title)}
               key={item?.title}
-              className={`border border-shop_light_green/30 px-4 py-1.5 md:px-6 md:py-2 rounded-full hover:bg-shop_light_green hover:border-shop_light_green hover:text-white hoverEffect ${selectedTab === item?.title ? "bg-shop_light_green text-white border-shop_light_green" : "bg-shop_light_green/10"}`}
+              className={`px-5 py-2.5 rounded-full text-xs md:text-sm font-semibold tracking-wide transition-all duration-200 cursor-pointer active:scale-95 ${
+                selectedTab === item?.title
+                  ? "bg-shop_dark_green text-white shadow-md shadow-shop_dark_green/20"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
             >
               {item?.title}
             </button>
@@ -24,9 +28,9 @@ const HomeTabbar = ({ selectedTab, onTabSelect }: Props) => {
       </div>
       <Link
         href={"/shop"}
-        className="border border-darkColor px-4 py-1 rounded-full hover:bg-shop_light_green hover:text-white hover:border-shop_light_green hoverEffect"
+        className="text-xs md:text-sm font-bold text-shop_dark_green hover:text-shop_light_green transition-colors duration-200 underline underline-offset-4"
       >
-        See all
+        See all products
       </Link>
     </div>
   );

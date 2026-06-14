@@ -1,10 +1,19 @@
 "use server";
 
 import stripe from "@/lib/stripe";
-import { Address } from "@/sanity.types";
-import { urlFor } from "@/sanity/lib/image";
 import { CartItem } from "@/store";
 import Stripe from "stripe";
+
+// Local address type (replaces Sanity Address)
+interface Address {
+  _id: string;
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  default?: boolean;
+}
 
 export interface Metadata {
   orderNumber: string;
@@ -12,6 +21,9 @@ export interface Metadata {
   customerEmail: string;
   clerkUserId?: string;
   address?: Address | null;
+  utmSource?: string | null;
+  utmCampaign?: string | null;
+  utmMedium?: string | null;
 }
 
 export interface GroupedCartItems {
@@ -38,6 +50,9 @@ export async function createCheckoutSession(
         customerEmail: metadata.customerEmail,
         clerkUserId: metadata.clerkUserId!,
         address: JSON.stringify(metadata.address),
+        utmSource: metadata.utmSource || "",
+        utmCampaign: metadata.utmCampaign || "",
+        utmMedium: metadata.utmMedium || "",
       },
       mode: "payment",
       allow_promotion_codes: true,
@@ -55,11 +70,12 @@ export async function createCheckoutSession(
           unit_amount: Math.round(item?.product?.price! * 100),
           product_data: {
             name: item?.product?.name || "Unknown Product",
-            description: item?.product?.description,
+            description: item?.product?.description ?? undefined,
             metadata: { id: item?.product?._id },
+            // Images are plain URLs from DB — no urlFor needed
             images:
               item?.product?.images && item?.product?.images?.length > 0
-                ? [urlFor(item?.product?.images[0]).url()]
+                ? [item.product.images[0]]
                 : undefined,
           },
         },

@@ -21,18 +21,18 @@ const socialLink = [
   },
   {
     title: "Github",
-    href: "https://github.com/JMBoulos12",
+    href: "https://github.com/krishna-tech1",
     icon: <Github className="w-5 h-5" />,
   },
   {
     title: "Linkedin",
-    href: "https://linkedin.com/in/jmboulos/",
+    href: "https://linkedin.com/in/muthu-krishnan-dev/",
     icon: <Linkedin className="w-5 h-5" />,
   },
 
   {
     title: "Instagram",
-    href: "https://www.instagram/jmboulos",
+    href: "https://www.instagram/",
     icon: <Instagram className="w-5 h-5" />,
   },
 ];

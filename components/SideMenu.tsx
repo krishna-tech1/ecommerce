@@ -18,7 +18,7 @@ const SideMenu: FC<SidebarProps> = ({ isOpen, onClose }) => {
     <div
       className={`fixed inset-y-0 h-screen left-0 z-50 w-full bg-black/50 text-white/70 shadow-xl ${
         isOpen ? "translate-x-0" : "-translate-x-full"
-      } hoverEffect`}
+      } transition-transform duration-300 ease-in-out`}
     >
       <div
         ref={sidebarRef}

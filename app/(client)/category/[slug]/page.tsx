@@ -1,7 +1,8 @@
 import CategoryProducts from "@/components/CategoryProducts";
 import Container from "@/components/Container";
 import Title from "@/components/Title";
-import { getCategories } from "@/sanity/queries";
+import { db } from "@/lib/db";
+import { categories } from "@/lib/db/schema";
 import React from "react";
 
 const CategoryPage = async ({
@@ -9,8 +10,20 @@ const CategoryPage = async ({
 }: {
   params: Promise<{ slug: string }>;
 }) => {
-  const categories = await getCategories();
   const { slug } = await params;
+
+  const dbCategories = await db
+    .select()
+    .from(categories)
+    .orderBy(categories.name);
+
+  const formattedCategories = dbCategories.map((cat) => ({
+    id: cat.id,
+    name: cat.name,
+    slug: cat.slug,
+    description: cat.description ?? null,
+  }));
+
   return (
     <div className="py-10">
       <Container>
@@ -20,7 +33,7 @@ const CategoryPage = async ({
             {slug && slug}
           </span>
         </Title>
-        <CategoryProducts categories={categories} slug={slug} />
+        <CategoryProducts categories={formattedCategories} slug={slug} />
       </Container>
     </div>
   );

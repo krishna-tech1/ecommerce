@@ -1,11 +1,11 @@
-import { Category } from "@/sanity.types";
+import { DbCategory } from "@/lib/types";
 import React from "react";
 import Title from "../Title";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Label } from "../ui/label";
 
 interface Props {
-  categories: Category[];
+  categories: DbCategory[];
   selectedCategory?: string | null;
   setSelectedCategory: React.Dispatch<React.SetStateAction<string | null>>;
 }
@@ -22,21 +22,21 @@ const CategoryList = ({
         {categories?.map((category) => (
           <div
             onClick={() => {
-              setSelectedCategory(category?.slug?.current as string);
+              setSelectedCategory(category?.slug);
             }}
-            key={category?._id}
+            key={category?.id}
             className="flex items-center space-x-2 hover:cursor-pointer"
           >
             <RadioGroupItem
-              value={category?.slug?.current as string}
-              id={category?.slug?.current}
+              value={category?.slug}
+              id={category?.slug}
               className="rounded-sm"
             />
             <Label
-              htmlFor={category?.slug?.current}
-              className={`${selectedCategory === category?.slug?.current ? "font-semibold text-shop_dark_green" : "font-normal"}`}
+              htmlFor={category?.slug}
+              className={`${selectedCategory === category?.slug ? "font-semibold text-shop_dark_green" : "font-normal"}`}
             >
-              {category?.title}
+              {category?.name}
             </Label>
           </div>
         ))}

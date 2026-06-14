@@ -1,5 +1,5 @@
 "use client";
-import { BRANDS_QUERYResult, Category, Product } from "@/sanity.types";
+import { DbCategory } from "@/lib/types";
 import React, { useEffect, useState } from "react";
 import Container from "./Container";
 import Title from "./Title";
@@ -7,20 +7,18 @@ import CategoryList from "./shop/CategoryList";
 import { useSearchParams } from "next/navigation";
 import BrandList from "./shop/BrandList";
 import PriceList from "./shop/PriceList";
-import { client } from "@/sanity/lib/client";
-import { Loader2 } from "lucide-react";
 import NoProductAvailable from "./NoProductAvailable";
 import ProductCard from "./ProductCard";
+import { DbProduct } from "@/lib/types";
 
 interface Props {
-  categories: Category[];
-  brands: BRANDS_QUERYResult;
+  categories: DbCategory[];
 }
-const Shop = ({ categories, brands }: Props) => {
+const Shop = ({ categories }: Props) => {
   const searchParams = useSearchParams();
   const brandParams = searchParams?.get("brand");
   const categoryParams = searchParams?.get("category");
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<DbProduct[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
     categoryParams || null
@@ -39,21 +37,15 @@ const Shop = ({ categories, brands }: Props) => {
         minPrice = min;
         maxPrice = max;
       }
-      const query = `
-      *[_type == 'product' 
-        && (!defined($selectedCategory) || references(*[_type == "category" && slug.current == $selectedCategory]._id))
-        && (!defined($selectedBrand) || references(*[_type == "brand" && slug.current == $selectedBrand]._id))
-        && price >= $minPrice && price <= $maxPrice
-      ] 
-      | order(name asc) {
-        ...,"categories": categories[]->title
+      const url = new URL("/api/products", window.location.origin);
+      if (selectedCategory) {
+        url.searchParams.set("category", selectedCategory);
       }
-    `;
-      const data = await client.fetch(
-        query,
-        { selectedCategory, selectedBrand, minPrice, maxPrice },
-        { next: { revalidate: 0 } }
-      );
+      url.searchParams.set("minPrice", minPrice.toString());
+      url.searchParams.set("maxPrice", maxPrice.toString());
+
+      const res = await fetch(url.toString());
+      const data = await res.json();
       setProducts(data);
     } catch (error) {
       console.log("Shop product fetching Error", error);
@@ -64,15 +56,19 @@ const Shop = ({ categories, brands }: Props) => {
 
   useEffect(() => {
     fetchProducts();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory, selectedBrand, selectedPrice]);
   return (
-    <div className="border-t">
-      <Container className="mt-5">
-        <div className="sticky top-0 z-10 mb-5">
-          <div className="flex items-center justify-between">
-            <Title className="text-lg uppercase tracking-wide">
-              Get the products as your needs
-            </Title>
+    <div className="border-t border-slate-100 bg-slate-50/30 min-h-screen">
+      <Container className="mt-8">
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <Title className="text-xl font-bold text-slate-800 tracking-tight">
+                Explore Products
+              </Title>
+              <p className="text-xs text-slate-500 mt-1">Filter products to find exactly what you need</p>
+            </div>
             {(selectedCategory !== null ||
               selectedBrand !== null ||
               selectedPrice !== null) && (
@@ -82,47 +78,60 @@ const Shop = ({ categories, brands }: Props) => {
                   setSelectedBrand(null);
                   setSelectedPrice(null);
                 }}
-                className="text-shop_dark_green underline text-sm mt-2 font-medium hover:text-darkRed hoverEffect"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-4 py-2 rounded-full font-bold transition-all duration-200 shadow-sm self-start sm:self-center"
               >
                 Reset Filters
               </button>
             )}
           </div>
         </div>
-        <div className="flex flex-col md:flex-row gap-5 border-t border-t-shop_dark_green/50">
-          <div className="md:sticky md:top-20 md:self-start md:h-[calc(100vh-160px)] md:overflow-y-auto md:min-w-64 pb-5 md:border-r border-r-shop_btn_dark_green/50 scrollbar-hide">
-            <CategoryList
-              categories={categories}
-              selectedCategory={selectedCategory}
-              setSelectedCategory={setSelectedCategory}
-            />
-            <BrandList
-              brands={brands}
-              setSelectedBrand={setSelectedBrand}
-              selectedBrand={selectedBrand}
-            />
-            <PriceList
-              setSelectedPrice={setSelectedPrice}
-              selectedPrice={selectedPrice}
-            />
+        <div className="flex flex-col md:flex-row gap-8 border-t border-slate-100 pt-6">
+          <div className="md:sticky md:top-24 md:self-start md:h-[calc(100vh-160px)] md:overflow-y-auto md:min-w-64 pb-8 md:border-r border-slate-100 pr-6 scrollbar-hide">
+            <div className="bg-white border border-slate-100 p-5 rounded-2xl shadow-sm space-y-6">
+              <CategoryList
+                categories={categories}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+              />
+              <div className="border-t border-slate-50 pt-4">
+                <BrandList
+                  setSelectedBrand={setSelectedBrand}
+                  selectedBrand={selectedBrand}
+                />
+              </div>
+              <div className="border-t border-slate-50 pt-4">
+                <PriceList
+                  setSelectedPrice={setSelectedPrice}
+                  selectedPrice={selectedPrice}
+                />
+              </div>
+            </div>
           </div>
-          <div className="flex-1 pt-5">
+          <div className="flex-1">
             <div className="h-[calc(100vh-160px)] overflow-y-auto pr-2 scrollbar-hide">
               {loading ? (
-                <div className="p-20 flex flex-col gap-2 items-center justify-center bg-white">
-                  <Loader2 className="w-10 h-10 text-shop_dark_green animate-spin" />
-                  <p className="font-semibold tracking-wide text-base">
-                    Product is loading . . .
-                  </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} className="border border-slate-100 rounded-xl overflow-hidden bg-white p-4 space-y-4 animate-pulse">
+                      <div className="h-48 bg-slate-100 rounded-lg w-full" />
+                      <div className="h-4 bg-slate-100 rounded w-1/3" />
+                      <div className="h-5 bg-slate-100 rounded w-3/4" />
+                      <div className="h-4 bg-slate-100 rounded w-1/2" />
+                      <div className="flex items-center justify-between pt-2">
+                        <div className="h-5 bg-slate-100 rounded w-1/3" />
+                        <div className="h-8 bg-slate-100 rounded-full w-24" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : products?.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {products?.map((product) => (
                     <ProductCard key={product?._id} product={product} />
                   ))}
                 </div>
               ) : (
-                <NoProductAvailable className="bg-white mt-0" />
+                <NoProductAvailable className="bg-white mt-0 rounded-2xl border border-slate-100 shadow-sm p-10" />
               )}
             </div>
           </div>

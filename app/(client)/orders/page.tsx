@@ -4,25 +4,64 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Table, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getMyOrders } from "@/sanity/queries";
-import { auth } from "@clerk/nextjs/server";
+import { db } from "@/lib/db";
+import { orders, orderItems, products } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { auth } from "@/auth";
 import { FileX } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import React from "react";
 
 const OrdersPage = async () => {
-  const { userId } = await auth();
+  const session = await auth();
+  const user = session?.user;
+  const userId = (user as { id?: string })?.id;
+
   if (!userId) {
-    return redirect("/");
+    return redirect("/sign-in");
   }
 
-  const orders = await getMyOrders(userId);
+  // Fetch orders with items from DB
+  const dbOrders = await db
+    .select({
+      id: orders.id,
+      orderNumber: orders.orderNumber,
+      createdAt: orders.createdAt,
+      customerName: orders.customerName,
+      customerEmail: orders.customerEmail,
+      totalPrice: orders.totalPrice,
+      status: orders.status,
+      stripeSessionId: orders.stripeSessionId,
+    })
+    .from(orders)
+    .where(eq(orders.userId, userId))
+    .orderBy(orders.createdAt);
+
+  // For each order, fetch items
+  const ordersWithItems = await Promise.all(
+    dbOrders.map(async (order) => {
+      const items = await db
+        .select({
+          id: orderItems.id,
+          quantity: orderItems.quantity,
+          price: orderItems.price,
+          productName: products.name,
+          productImage: products.images,
+          productSlug: products.slug,
+        })
+        .from(orderItems)
+        .leftJoin(products, eq(orderItems.productId, products.id))
+        .where(eq(orderItems.orderId, order.id));
+
+      return { ...order, items };
+    })
+  );
 
   return (
     <div>
       <Container className="py-10">
-        {orders?.length ? (
+        {ordersWithItems?.length ? (
           <Card className="w-full">
             <CardHeader>
               <CardTitle>Order List</CardTitle>
@@ -44,13 +83,10 @@ const OrdersPage = async () => {
                       </TableHead>
                       <TableHead>Total</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead className="hidden sm:table-cell">
-                        Invoice Number
-                      </TableHead>
                       <TableHead className="text-center">Action</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <OrdersComponent orders={orders} />
+                  <OrdersComponent orders={ordersWithItems} />
                 </Table>
                 <ScrollBar orientation="horizontal" />
               </ScrollArea>

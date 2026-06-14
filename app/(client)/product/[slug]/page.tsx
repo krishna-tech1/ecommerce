@@ -4,8 +4,10 @@ import FavoriteButton from "@/components/FavoriteButton";
 import ImageView from "@/components/ImageView";
 import PriceView from "@/components/PriceView";
 import ProductCharacteristics from "@/components/ProductCharacteristics";
-import { getProductBySlug } from "@/sanity/queries";
-import { CornerDownLeft, StarIcon, Truck } from "lucide-react";
+import { db } from "@/lib/db";
+import { products, categories } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { Star, CornerDownLeft, Truck } from "lucide-react";
 import { notFound } from "next/navigation";
 import React from "react";
 import { FaRegQuestionCircle } from "react-icons/fa";
@@ -19,10 +21,35 @@ const SingleProductPage = async ({
   params: Promise<{ slug: string }>;
 }) => {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
-  if (!product) {
-    return notFound();
-  }
+
+  // Fetch product from DB by slug
+  const [row] = await db
+    .select({ product: products, categoryName: categories.name })
+    .from(products)
+    .leftJoin(categories, eq(products.categoryId, categories.id))
+    .where(eq(products.slug, slug))
+    .limit(1);
+
+  if (!row) return notFound();
+
+  const { product: dbProduct, categoryName } = row;
+
+  // Shape into DbProduct format
+  const product = {
+    _id: dbProduct.id,
+    _type: "product" as const,
+    name: dbProduct.name,
+    slug: { current: dbProduct.slug },
+    description: dbProduct.description,
+    price: Number(dbProduct.price),
+    images: dbProduct.images,
+    stock: dbProduct.stock,
+    variant: dbProduct.variant,
+    status: dbProduct.status,
+    categories: categoryName ? [categoryName] : [],
+    createdAt: dbProduct.createdAt?.toISOString(),
+  };
+
   return (
     <Container className="flex flex-col md:flex-row gap-10 py-10">
       {product?.images && (
@@ -36,14 +63,14 @@ const SingleProductPage = async ({
           </p>
           <div className="flex items-center gap-0.5 text-xs">
             {[...Array(5)].map((_, index) => (
-              <StarIcon
+              <Star
                 key={index}
                 size={12}
                 className="text-shop_light_green"
                 fill={"#3b9c3c"}
               />
             ))}
-            <p className="font-semibold">{`(120)`}</p>
+            <p className="font-semibold ml-1">{`(120)`}</p>
           </div>
         </div>
         <div className="space-y-2 border-t border-b border-gray-200 py-5">
@@ -74,7 +101,7 @@ const SingleProductPage = async ({
           </div>
           <div className="flex items-center gap-2 text-sm text-black hover:text-red-600 hoverEffect">
             <TbTruckDelivery className="text-lg" />
-            <p>Delivery & Return</p>
+            <p>Delivery &amp; Return</p>
           </div>
           <div className="flex items-center gap-2 text-sm text-black hover:text-red-600 hoverEffect">
             <FiShare2 className="text-lg" />
@@ -89,7 +116,7 @@ const SingleProductPage = async ({
                 Free Delivery
               </p>
               <p className="text-sm text-gray-500 underline underline-offset-2">
-                Enter your Postal code for Delivey Availability.
+                Enter your Postal code for Delivery Availability.
               </p>
             </div>
           </div>
@@ -99,8 +126,8 @@ const SingleProductPage = async ({
               <p className="text-base font-semibold text-black">
                 Return Delivery
               </p>
-              <p className="text-sm text-gray-500 ">
-                Free 30days Delivery Returns.{" "}
+              <p className="text-sm text-gray-500">
+                Free 30 days Delivery Returns.{" "}
                 <span className="underline underline-offset-2">Details</span>
               </p>
             </div>

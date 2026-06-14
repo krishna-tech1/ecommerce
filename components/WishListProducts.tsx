@@ -6,11 +6,9 @@ import Container from "./Container";
 import { Heart, X } from "lucide-react";
 import { Button } from "./ui/button";
 import Link from "next/link";
-import { Product } from "@/sanity.types";
+import { DbProduct } from "@/lib/types";
 import toast from "react-hot-toast";
-import { urlFor } from "@/sanity/lib/image";
 import Image from "next/image";
-import PriceFormatter from "./PriceFormatter";
 import AddToCartButton from "./AddToCartButton";
 
 const WishListProducts = () => {
@@ -32,129 +30,126 @@ const WishListProducts = () => {
   };
 
   return (
-    <Container>
+    <Container className="py-8">
       {favoriteProduct?.length > 0 ? (
         <>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto border border-slate-100 rounded-2xl bg-white shadow-sm">
             <table className="w-full border-collapse">
-              <thead className="border-b">
-                <tr className="bg-black/5">
-                  <th className="p-2 text-left">Image</th>
-                  <th className="p-2 text-left hidden md:table-cell">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-100 text-slate-700 text-xs font-bold tracking-wider uppercase">
+                  <th className="p-4 text-left">Product</th>
+                  <th className="p-4 text-left hidden md:table-cell">
                     Category
                   </th>
-                  <th className="p-2 text-left md:table-cell">Type</th>
-                  <th className="p-2 text-left md:table-cell">Status</th>
-                  <th className="p-2 text-left md:table-cell">Price</th>
-                  <th className="p-2 text-left md:table-cell">Action</th>
+                  <th className="p-4 text-left md:table-cell">Type</th>
+                  <th className="p-4 text-left md:table-cell">Status</th>
+                  <th className="p-4 text-left md:table-cell">Action</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100">
                 {favoriteProduct
                   ?.slice(0, visibleProducts)
-                  ?.map((product: Product) => (
-                    <tr key={product?._id} className="border-b">
-                      <td className="p-2 py-4 flex items-center gap-2">
+                  ?.map((product: DbProduct) => (
+                    <tr key={product?._id} className="hover:bg-slate-50/30 transition-colors duration-150">
+                      <td className="p-4 flex items-center gap-3">
                         <X
                           onClick={() => {
                             removeFromFavorite(product?._id);
                             toast.success("Removed from wishlist");
                           }}
                           size={16}
-                          className="hover:text-red-600 hover:cursor-pointer hoverEffect"
+                          className="text-slate-400 hover:text-red-500 hover:cursor-pointer transition-colors"
                         />
-                        {product?.images && (
+                        {product?.images?.[0] && (
                           <Link
                             href={`/product/${product?.slug?.current}`}
-                            className="border rounded-md group hidden md:inline-flex"
+                            className="border border-slate-100 rounded-xl group hidden md:inline-flex p-1 bg-slate-50 overflow-hidden"
                           >
                             <Image
-                              src={urlFor(product?.images[0]).url()}
+                              src={product.images[0]}
                               alt={product?.name || "product"}
                               width={80}
                               height={80}
-                              className="rounded-md group-hover:scale-105 hoverEffect h-20 w-20 object-contain"
+                              className="rounded-lg group-hover:scale-105 transition-transform duration-300 h-16 w-16 object-contain"
                             />
                           </Link>
                         )}
-                        <p className="line-clamp-1">{product?.name}</p>
+                        <span className="font-bold text-slate-800 line-clamp-1">{product?.name}</span>
                       </td>
-                      <td className="p-2 py-4 hidden md:table-cell">
-                        {product?.categories && (
-                          <p className="uppercase line-clamp-1 text-xs font-medium">
-                            {product.categories.map((cat) => cat).join(", ")}
-                          </p>
+                      <td className="p-4 hidden md:table-cell">
+                        {product?.categories && product.categories.length > 0 && (
+                          <span className="uppercase tracking-wider text-[10px] font-bold text-slate-400">
+                            {product.categories.join(", ")}
+                          </span>
                         )}
                       </td>
-                      <td className="p-2 py-4 hidden md:table-cell">
+                      <td className="p-4 hidden md:table-cell text-sm text-slate-500 font-medium capitalize">
                         {product?.variant}
                       </td>
-                      <td
-                        className={`p-2 w-24 ${
-                          (product?.stock as number) > 0
-                            ? "text-green-600"
-                            : "text-red-600"
-                        } font-medium text-sm hidden md:table-cell`}
-                      >
-                        {(product?.stock as number) > 0
-                          ? "In Stock"
-                          : "Out of Stock"}
+                      <td className="p-4 hidden md:table-cell">
+                        <span
+                          className={`px-2 py-0.5 rounded-md text-xs font-semibold ${
+                            (product?.stock as number) > 0
+                              ? "text-emerald-700 bg-emerald-50"
+                              : "text-red-600 bg-red-50"
+                          }`}
+                        >
+                          {(product?.stock as number) > 0
+                            ? "In Stock"
+                            : "Out of Stock"}
+                        </span>
                       </td>
-                      <td className="p-2">
-                        <AddToCartButton product={product} className="w-full" />
+                      <td className="p-4">
+                        <AddToCartButton product={product} className="w-full text-xs font-bold py-2 rounded-xl" />
                       </td>
                     </tr>
                   ))}
               </tbody>
             </table>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap mt-6">
             {visibleProducts < favoriteProduct?.length && (
-              <div className="my-5">
-                <Button variant="outline" onClick={loadMore}>
-                  Load More
-                </Button>
-              </div>
+              <Button variant="outline" className="border-slate-200 text-slate-600 rounded-xl font-bold text-xs hover:bg-slate-50 py-2.5" onClick={loadMore}>
+                Load More
+              </Button>
             )}
             {visibleProducts > 10 && (
-              <div className="my-5">
-                <Button
-                  onClick={() => setVisibleProducts(10)}
-                  variant="outline"
-                >
-                  Load Less
-                </Button>
-              </div>
-            )}
-            <div className="my-5">
               <Button
-                onClick={handleResetWishlist}
-                className="w-full"
-                variant="destructive"
-                size="lg"
+                onClick={() => setVisibleProducts(10)}
+                variant="outline"
+                className="border-slate-200 text-slate-600 rounded-xl font-bold text-xs hover:bg-slate-50 py-2.5"
               >
-                Reset Wishlist
+                Load Less
               </Button>
-            </div>
+            )}
+            <Button
+              onClick={handleResetWishlist}
+              className="bg-white border border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600 rounded-xl font-bold py-2.5 text-xs shadow-sm cursor-pointer"
+              variant="outline"
+            >
+              Reset Wishlist
+            </Button>
           </div>
         </>
       ) : (
-        <div className="flex min-h-[400px] flex-col items-center justify-center space-y-6 px-4 text-center">
-          <div className="relative mb-4">
-            <div className="absolute -top-1 -right-1 h-4 w-4 animate-ping rounded-full bg-muted-foreground/20" />
-            <Heart
-              className="h-12 w-12 text-muted-foreground"
-              strokeWidth={1.5}
-            />
+        <div className="flex min-h-[450px] flex-col items-center justify-center space-y-6 px-4 text-center bg-white border border-slate-100 rounded-2xl shadow-sm mt-8 p-8">
+          <div className="relative">
+            <div className="absolute -top-1 -right-1 h-3 h-3 animate-ping rounded-full bg-emerald-500/35" />
+            <div className="p-5 bg-emerald-50 text-emerald-600 rounded-full">
+              <Heart
+                className="h-10 w-10"
+                strokeWidth={1.5}
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <h2 className="text-3xl font-bold tracking-tight">
-              Your wishlist is empty
+          <div className="space-y-2 max-w-md">
+            <h2 className="text-2xl font-black text-slate-800 tracking-tight">
+              Your Wishlist is Empty
             </h2>
-            <p className="text-muted-foreground">
-              Items added to your wishlist will appear here
+            <p className="text-slate-500 text-sm">
+              Keep track of items you love by adding them to your wishlist.
             </p>
-            <Button asChild>
+            <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-md shadow-emerald-950/10 transition-all duration-200 mt-4 cursor-pointer inline-flex">
               <Link href="/shop">Continue Shopping</Link>
             </Button>
           </div>

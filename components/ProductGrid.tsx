@@ -3,29 +3,26 @@
 import React, { useEffect, useState } from "react";
 import ProductCard from "./ProductCard";
 import { motion, AnimatePresence } from "motion/react";
-import { client } from "@/sanity/lib/client";
 import NoProductAvailable from "./NoProductAvailable";
-import { Loader2 } from "lucide-react";
 import Container from "./Container";
-import HomeTabbar from "./HomeTabbar";
+import HomeTabbar from "./HomeTabBar";
 import { productType } from "@/constants/data";
-import { Product } from "@/sanity.types";
+import { DbProduct } from "@/lib/types";
 
 const ProductGrid = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<DbProduct[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedTab, setSelectedTab] = useState(productType[0]?.title || "");
-  const query = `*[_type == "product" && variant == $variant] | order(name asc){
-  ...,"categories": categories[]->title
-}`;
-  const params = { variant: selectedTab.toLowerCase() };
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await client.fetch(query, params);
-        setProducts(await response);
+        const url = new URL("/api/products", window.location.origin);
+        url.searchParams.set("variant", selectedTab.toLowerCase());
+        const res = await fetch(url.toString());
+        const data = await res.json();
+        setProducts(data);
       } catch (error) {
         console.log("Product fetching Error", error);
       } finally {
@@ -39,14 +36,22 @@ const ProductGrid = () => {
     <Container className="flex flex-col lg:px-0 my-10">
       <HomeTabbar selectedTab={selectedTab} onTabSelect={setSelectedTab} />
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-10 min-h-80 space-y-4 text-center bg-gray-100 rounded-lg w-full mt-10">
-          <motion.div className="flex items-center space-x-2 text-blue-600">
-            <Loader2 className="w-5 h-5 animate-spin" />
-            <span>Product is loading...</span>
-          </motion.div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mt-10">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="border border-slate-100 rounded-xl overflow-hidden bg-white p-4 space-y-4 animate-pulse">
+              <div className="h-48 bg-slate-100 rounded-lg w-full" />
+              <div className="h-4 bg-slate-100 rounded w-1/3" />
+              <div className="h-5 bg-slate-100 rounded w-3/4" />
+              <div className="h-4 bg-slate-100 rounded w-1/2" />
+              <div className="flex items-center justify-between pt-2">
+                <div className="h-5 bg-slate-100 rounded w-1/3" />
+                <div className="h-8 bg-slate-100 rounded-full w-24" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : products?.length ? (
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 mt-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mt-10">
           <>
             {products?.map((product) => (
               <AnimatePresence key={product?._id}>

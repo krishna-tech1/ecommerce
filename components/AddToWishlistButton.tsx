@@ -1,13 +1,12 @@
 import { cn } from "@/lib/utils";
-import { Product } from "@/sanity.types";
+import { DbProduct } from "@/lib/types";
 import { Heart } from "lucide-react";
 import React from "react";
 
 const AddToWishlistButton = ({
-  product,
   className,
 }: {
-  product: Product;
+  product: DbProduct;
   className?: string;
 }) => {
   return (

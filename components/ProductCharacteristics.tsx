@@ -1,5 +1,4 @@
-import { Product } from "@/sanity.types";
-import { getBrand } from "@/sanity/queries";
+import { DbProduct } from "@/lib/types";
 import React from "react";
 import {
   Accordion,
@@ -8,26 +7,21 @@ import {
   AccordionTrigger,
 } from "./ui/accordion";
 
-const ProductCharacteristics = async ({
+const ProductCharacteristics = ({
   product,
 }: {
-  product: Product | null | undefined;
+  product: DbProduct | null | undefined;
 }) => {
-  const brand = await getBrand(product?.slug?.current as string);
-  console.log(brand);
-
   return (
     <Accordion type="single" collapsible>
       <AccordionItem value="item-1">
         <AccordionTrigger>{product?.name}: Characteristics</AccordionTrigger>
         <AccordionContent>
           <p className="flex items-center justify-between">
-            Brand:{" "}
-            {brand && (
-              <span className="font-semibold tracking-wide">
-                {brand[0]?.brandName}
-              </span>
-            )}
+            Category:{" "}
+            <span className="font-semibold tracking-wide">
+              {product?.categories?.[0] ?? "—"}
+            </span>
           </p>
           <p className="flex items-center justify-between">
             Collection:{" "}
@@ -35,8 +29,8 @@ const ProductCharacteristics = async ({
           </p>
           <p className="flex items-center justify-between">
             Type:{" "}
-            <span className="font-semibold tracking-wide">
-              {product?.variant}
+            <span className="font-semibold tracking-wide capitalize">
+              {product?.variant ?? "—"}
             </span>
           </p>
           <p className="flex items-center justify-between">

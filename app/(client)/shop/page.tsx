@@ -1,15 +1,24 @@
 import Shop from "@/components/Shop";
-import { getAllBrands, getCategories } from "@/sanity/queries";
+import { db } from "@/lib/db";
+import { categories } from "@/lib/db/schema";
 import React from "react";
 
-const ShopPage = async() => {
-  const categories = await getCategories();
-  const brands = await getAllBrands();
+const ShopPage = async () => {
+  // Fetch all categories from DB for the shop sidebar filter
+  const dbCategories = await db.select().from(categories).orderBy(categories.name);
+
+  const formattedCategories = dbCategories.map((cat) => ({
+    id: cat.id,
+    name: cat.name,
+    slug: cat.slug,
+    description: cat.description ?? null,
+  }));
+
   return (
     <div>
-      <Shop categories={categories} brands={brands} />
+      <Shop categories={formattedCategories} />
     </div>
-    )
+  );
 };
 
 export default ShopPage;
