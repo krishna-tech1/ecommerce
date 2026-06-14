@@ -45,7 +45,12 @@ export async function GET(req: Request) {
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const authToken = process.env.TWILIO_AUTH_TOKEN;
     const twilioNumber = process.env.TWILIO_WHATSAPP_NUMBER || "whatsapp:+14155238886";
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    
+    // Automatically detect Vercel production domain or fallback to the live site URL
+    const vercelProdUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL 
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` 
+      : (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
+    const baseUrl = vercelProdUrl || process.env.NEXT_PUBLIC_BASE_URL || "https://ecommerce-theta-teal.vercel.app";
 
     if (!accountSid || !authToken) {
       console.error("Twilio credentials not configured in environment variables.");
