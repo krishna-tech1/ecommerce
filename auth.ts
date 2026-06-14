@@ -3,8 +3,10 @@ import Credentials from "next-auth/providers/credentials";
 import { db } from "./lib/db";
 import { users } from "./lib/db/schema";
 import { eq } from "drizzle-orm";
+import { authConfig } from "./auth.config";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   providers: [
     Credentials({
       id: "credentials",
@@ -33,7 +35,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           throw new Error("Phone number and OTP are required");
         }
 
-        // Validate OTP is 6 digits
         if (!/^\d{6}$/.test(otp)) {
           throw new Error("OTP must be a 6-digit number");
         }
@@ -102,26 +103,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-  session: {
-    strategy: "jwt",
-  },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = (user as any).role;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        (session.user as any).id = token.id;
-        (session.user as any).role = token.role;
-      }
-      return session;
-    },
-  },
-  pages: {
-    signIn: "/sign-in",
-  },
 });
