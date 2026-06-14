@@ -5,9 +5,18 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    // 1. Calculate the threshold date (3 minutes ago)
+    // 1. Simple security check
+    const { searchParams } = new URL(req.url);
+    const secret = searchParams.get("secret");
+    const cronSecret = process.env.CRON_SECRET;
+    
+    if (cronSecret && secret !== cronSecret) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // 2. Calculate the threshold date (3 minutes ago)
     const threshold = new Date(Date.now() - 3 * 60 * 1000);
 
     // 2. Fetch all cart entries abandoned > 3 minutes ago that have NOT received outreach and are NOT recovered
