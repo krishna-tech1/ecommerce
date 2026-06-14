@@ -59,7 +59,7 @@ const HomeBanner = () => {
         </div>
 
         {/* Trust badges */}
-        <div className="flex items-center gap-4 pt-2">
+        <div className="flex items-center gap-4 pt-2 flex-wrap">
           {badges.map((badge, i) => (
             <div
               key={i}

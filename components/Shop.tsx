@@ -108,7 +108,7 @@ const Shop = ({ categories }: Props) => {
             </div>
           </div>
           <div className="flex-1">
-            <div className="h-[calc(100vh-160px)] overflow-y-auto pr-2 scrollbar-hide">
+            <div className="md:h-[calc(100vh-160px)] md:overflow-y-auto h-auto pr-2 scrollbar-hide">
               {loading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {Array.from({ length: 8 }).map((_, i) => (
