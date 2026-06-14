@@ -117,6 +117,7 @@ export const metaEvents = pgTable("meta_events", {
 export const abandonedCarts = pgTable("abandoned_carts", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+  productName: text("product_name"),
   abandonedAt: timestamp("abandoned_at").defaultNow().notNull(),
   watiMessageSentAt: timestamp("wati_message_sent_at"),
   recovered: text("recovered").default("false").notNull(), // "true" or "false"
